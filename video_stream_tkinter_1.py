@@ -47,25 +47,37 @@ class VideoStar():
         self.img = ImageTk.PhotoImage(Image.fromarray(self.frame))
         self.create_widgets()
         # Start video capture on startup
-        self.start_capture()
+        self.streaming = False
+        self.start_stop_stream()
         self.root.mainloop()
 
-# ------------------ STOP VIDEO CAPTURE -----------------------------------#
-    def stop_capture(self):
+# ------------------ START STOP VIDEO STREAM ------------------------------#
+    def start_stop_stream(self):
+        if not self.streaming:
+            self.start_stream()
+        else:
+            self.stop_stream()
+
+# ------------------ STOP VIDEO STREAM ------------------------------------#
+    def stop_stream(self):
         """Stop video capture"""
+        self.streaming = False
+        self.btn_start_stop.configure(text="Start Stream")
         # Release the camera capture object
         if self.cam.isOpened():
             self.cam.release()
-        self.lbl_status_bar.configure(text=" Video Capture Stopped")
+        self.lbl_status_bar.configure(text=" Video Stream Stopped")
 
 # ------------------ START VIDEO CAPTURE ----------------------------------#
-    def start_capture(self):
+    def start_stream(self):
         """Start video capture"""
-        self.lbl_status_bar.configure(text=" Video Capture Starting Up . . .")
+        self.streaming = True
+        self.lbl_status_bar.configure(text=" Video Stream Starting Up . . .")
         self.lbl_status_bar.update()
+        self.btn_start_stop.configure(text="Stop Stream")
         # Create VideoCapture object 0 = 1st camera
         self.cam = cv2.VideoCapture(0)
-        self.lbl_status_bar.configure(text=" Video Capture Running . . .")
+        self.lbl_status_bar.configure(text=" Video Stream Running . . .")
         try:
             while True:
                 # Read camera image frame by frame
@@ -136,25 +148,23 @@ class VideoStar():
             self.root, text=message, anchor=tk.W, relief=tk.RIDGE)
 
         BUTTON_WIDTH = 16
-        btn_start_capture = ttk.Button(
-            self.root, text="Start Capture",
-            command=self.start_capture, width=BUTTON_WIDTH)
-        btn_stop_capture = ttk.Button(
-            self.root, text="Stop Capture",
-            command=self.stop_capture, width=16)
-        btn_snapshot = ttk.Button(
+        self.btn_start_stop = ttk.Button(
+            self.root, text="Start Streams",
+            command=self.start_stop_stream,
+            width=BUTTON_WIDTH
+        )
+        self.btn_snapshot = ttk.Button(
             self.root, text="Snapshot",
             command=self.snapshot, width=BUTTON_WIDTH
         )
-        btn_quit = ttk.Button(
+        self.btn_quit = ttk.Button(
             self.root, text="Quit", command=self.quit, width=BUTTON_WIDTH)
 
         self.lbl_image.grid(row=0, column=0, columnspan=4)
 
-        btn_start_capture.grid(row=1, column=0)
-        btn_stop_capture.grid(row=1, column=1)
-        btn_snapshot.grid(row=1, column=2)
-        btn_quit.grid(row=1, column=3)
+        self.btn_start_stop.grid(row=1, column=0)
+        self.btn_snapshot.grid(row=1, column=1)
+        self.btn_quit.grid(row=1, column=2)
 
         self.lbl_status_bar.grid(row=2, column=0, columnspan=4, sticky="WE")
 
