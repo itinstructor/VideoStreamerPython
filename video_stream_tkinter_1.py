@@ -86,8 +86,6 @@ class VideoStar():
                 ret, self.frame = self.cam.read()
                 # Convert cv2 colorspace BGR to RGB
                 self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
-                # Rotate image 90 degrees as camera is sideways on MARS Rover
-                # self.frame = cv2.rotate(self.frame, cv2.ROTATE_90_CLOCKWISE)
                 # PIL Image.fromarray creates image from numpy array self.frame
                 # ImageTk.PhotoImage converts image to Tkinter image format
                 img_update = ImageTk.PhotoImage(Image.fromarray(self.frame))
