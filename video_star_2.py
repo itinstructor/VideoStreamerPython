@@ -83,21 +83,23 @@ class VideoStar():
             # Read camera image frame by frame
             # ret: Is a frame available True
             # frame: captured image
-            ret, frame = self.cam.read()
-            if ret:
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                image = Image.fromarray(frame)
-                if self.rotation_angle != 0:
-                    image = image.rotate(self.rotation_angle)
-                photo = ImageTk.PhotoImage(image=image)
-                self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
-                self.stream = photo
-                self.display_fps()
-            else:
-                self.lbl_status_bar.configure(text=" Failed to grab frame")
-                # # Convert cv2 colorspace BGR to RGB
-                # self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
-
+            try:
+                ret, frame = self.cam.read()
+                if ret:
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    image = Image.fromarray(frame)
+                    if self.rotation_angle != 0:
+                        image = image.rotate(self.rotation_angle)
+                    photo = ImageTk.PhotoImage(image=image)
+                    self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
+                    self.stream = photo
+                    self.display_fps()
+                else:
+                    self.lbl_status_bar.configure(text=" Failed to grab frame")
+                    # # Convert cv2 colorspace BGR to RGB
+                    # self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
+            except Exception as e:
+                print(f"{e}")
         # Update video stream every 10 ms when the main program isn't busy
         self.root.after(10, self.update_stream)
 
