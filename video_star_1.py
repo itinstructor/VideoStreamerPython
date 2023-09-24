@@ -5,7 +5,8 @@
     Created: 09/08/22
     Purpose: Stream video to a Tkinter interface
     Rotate image 90 degrees as camera is sideways on MARS Rover
-    Enable legacy camera support for now as opencv doesn't work with Bullseye libcamera stack
+    Enable legacy camera support for now as opencv 
+    doesn't work with Bullseye libcamera stack
 """
 # Raspberry Pi/Linux
 # sudo pip3 install opencv-python
