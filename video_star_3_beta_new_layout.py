@@ -38,9 +38,10 @@ class VideoStar():
     def __init__(self) -> None:
         self.root = tk.Tk()
         self.root.title("Video Star OpenCV")
-        # Set window location at 350x50 for pi zero
-        # 600x50 pi
+        # Set window location at
+        # 600x50 for pi, 350x50 for pi zero
         self.root.geometry("+600+50")
+
         # Call self.quit when window is closed
         self.root.protocol("WM_DELETE_WINDOW", self.quit)
 
@@ -84,43 +85,69 @@ class VideoStar():
 
 # ------------------------ UPDATE STREAM ----------------------------------#
     def update_stream(self):
-        """Read camera image frame by frame to update video stream"""
+        """Update the video stream by reading camera frames"""
+        # Check if streaming is enabled
         if self.streaming:
-            # Read camera image frame by frame
-            # ret: Is a frame available True
-            # frame: captured image
+            # Read a frame from the camera
+            # ret: Indicates if a frame is available, frame: Captured image
             ret, frame = self.cam.read()
             if ret:
+                # Convert the frame from BGR to RGB color space
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+                # Create an Image object from the frame
                 image = Image.fromarray(frame)
+
+                # Rotate the image if the rotation angle is not zero
                 if self.rotation_angle != 0:
                     image = image.rotate(self.rotation_angle)
+
+                # Create a PhotoImage object from the Image
                 photo = ImageTk.PhotoImage(image=image)
+
+                # Display the image on the canvas
                 self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
+
+                # Store the PhotoImage to update the stream
                 self.stream = photo
+
+                # Display the frames per second information
                 self.display_fps()
             else:
+                # Display an error message if failed to grab a frame
                 self.lbl_status_bar.configure(text=" Failed to grab frame")
-                # # Convert cv2 colorspace BGR to RGB
+                # Uncomment the following line to convert the frame from BGR to RGB
                 # self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
-        # Update video stream every 10 ms when the main program isn't busy
+        # Schedule the function to update the stream every 10 milliseconds
+        # when the main program isn't busy
         self.root.after(10, self.update_stream)
 
-# ---------------------- TAKE SNAPSHOT ------------------------------------#
+# ---------------------- SAVE FRAME TO DISK -------------------------------#
     def snapshot(self):
-        """Get and write a single video frame to a jpg image"""
+        """Capture and save a single video frame as a jpg image"""
         # Get a frame from the video source
         ret, frame = self.cam.read()
 
+        # Check if a frame is successfully retrieved
         if ret == True:
+            # Convert frame color format from BGR to RGB
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            # Create an Image object from the frame
             image = Image.fromarray(frame)
+
+            # Check if rotation angle is not zero, rotate the image
             if self.rotation_angle != 0:
                 image = image.rotate(self.rotation_angle)
 
+            # Generate a filename with the current date and time
             filename = f"capture_{time.strftime('%Y%m%d%H%M%S')}.jpg"
+
+            # Save the image with the generated filename
             image.save(filename)
+
+            # Print a message confirming the image is saved with its filename
             print(f"Image saved as {filename}")
 
 # --------------------------- ROTATE IMAGE --------------------------------#
@@ -134,20 +161,34 @@ class VideoStar():
 # --------------------------- SAVE SETTINGS -------------------------------#
     def save_settings(self):
         """Save program settings for RotationAngle"""
+        # Create a ConfigParser object to handle configuration file
         config = configparser.ConfigParser()
-        config['Settings'] = {'RotationAngle': str(self.rotation_angle)}
+        # Define the 'Settings' section
+        # set 'RotationAngle' key with the value as a string
+        config["Settings"] = {"RotationAngle": str(self.rotation_angle)}
 
-        with open('settings.ini', 'w') as configfile:
+        # Open the settings.ini file in write mode
+        with open("settings.ini", "w") as configfile:
+            # Write the configuration data into the settings.ini file
             config.write(configfile)
 
 # --------------------------- LOAD SETTINGS -------------------------------#
     def load_settings(self):
         """Load program settings for RotationAngle"""
-        if os.path.exists('settings.ini'):
+        # Check if the settings file exists
+        if os.path.exists("settings.ini"):
+            # Create a ConfigParser object to handle configuration file
             config = configparser.ConfigParser()
-            config.read('settings.ini')
-            if 'Settings' in config:
-                rotation_angle = config['Settings'].get('RotationAngle', '0')
+
+            # Read the content of the settings file
+            config.read("settings.ini")
+
+            # Check if the 'Settings' section exists in the configuration
+            if "Settings" in config:
+                # Get the 'RotationAngle' value from the 'Settings' section
+                rotation_angle = config['Settings'].get("RotationAngle", "0")
+                # Convert the obtained value to an integer
+                # and assign it to self.rotation_angle
                 self.rotation_angle = int(rotation_angle)
 
 # --------------------------- DISPLAY FPS ---------------------------------#
@@ -166,7 +207,7 @@ class VideoStar():
             self.root,
             relief=tk.RIDGE
         )
-        
+
         # Create canvas to display image
         self.canvas = tk.Canvas(self.main_frame, width=640, height=480)
 
