@@ -43,10 +43,10 @@ class VideoStar():
         self.root.protocol("WM_DELETE_WINDOW", self.quit)
 
         # Create VideoCapture object 0 = 1st camera
-        self.cam = cv2.VideoCapture(0)
+        self.camera = cv2.VideoCapture(0)
         # Start streaming flag to false
-        self.streaming = False
-        self.rotation_angle = 0
+        self.is_streaming = False
+        self.rotation = 0
         self.load_settings()
 
         self.create_widgets()
@@ -55,7 +55,7 @@ class VideoStar():
 # ----------------------- START STOP VIDEO STREAM -------------------------#
     def start_stop_stream(self):
         """Stop or start the video stream"""
-        if not self.streaming:
+        if not self.is_streaming:
             self.start_stream()
         else:
             self.stop_stream()
@@ -64,14 +64,14 @@ class VideoStar():
     def stop_stream(self):
         """Stop video stream"""
         # self.streaming set to false stops the update_stream method
-        self.streaming = False
+        self.is_streaming = False
         self.btn_start_stop.configure(text="Start Stream")
         self.lbl_status_bar.configure(text=" Video Stream Stopped")
 
 # ----------------------- START VIDEO CAPTURE -----------------------------#
     def start_stream(self):
         """Start video stream"""
-        self.streaming = True
+        self.is_streaming = True
         self.lbl_status_bar.configure(text=" Video Stream Starting Up . . .")
         self.lbl_status_bar.update()
         self.btn_start_stop.configure(text="Stop Stream")
@@ -82,10 +82,10 @@ class VideoStar():
     def update_stream(self):
         """Update the video stream by reading camera frames"""
         # Check if streaming is enabled
-        if self.streaming == True:
+        if self.is_streaming == True:
             # Read a frame from the camera
             # ret: Indicates if a frame is available, frame: Captured image
-            ret, frame = self.cam.read()
+            ret, frame = self.camera.read()
             if ret:
                 # Convert the frame from BGR to RGB color space
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -94,8 +94,8 @@ class VideoStar():
                 image = Image.fromarray(frame)
 
                 # Rotate the image if the rotation angle is not zero
-                if self.rotation_angle != 0:
-                    image = image.rotate(self.rotation_angle)
+                if self.rotation != 0:
+                    image = image.rotate(self.rotation)
 
                 # Create a PhotoImage object from the Image
                 photo = ImageTk.PhotoImage(image=image)
@@ -118,11 +118,11 @@ class VideoStar():
         # when the main program isn't busy
         self.root.after(10, self.update_stream)
 
-# ---------------------- TAKE SNAPSHOT ------------------------------------#
-    def snapshot(self):
+# ---------------------- CAPTURE IMAGE ------------------------------------#
+    def capture_image(self):
         """Capture and save a single video frame as a jpg image"""
         # Get a frame from the video source
-        ret, frame = self.cam.read()
+        ret, frame = self.camera.read()
 
         # Check if a frame is successfully retrieved
         if ret == True:
@@ -133,11 +133,11 @@ class VideoStar():
             image = Image.fromarray(frame)
 
             # Check if rotation angle is not zero, rotate the image
-            if self.rotation_angle != 0:
-                image = image.rotate(self.rotation_angle)
+            if self.rotation != 0:
+                image = image.rotate(self.rotation)
 
             # Generate a filename with the current date and time
-            filename = f"capture_{time.strftime('%Y%m%d%H%M%S')}.jpg"
+            filename = f"capture_{time.strftime('%Y-%m-%d_%H-%M-%S')}.jpg"
 
             # Save the image with the generated filename
             image.save(filename)
@@ -148,9 +148,9 @@ class VideoStar():
 # --------------------------- ROTATE IMAGE --------------------------------#
     def rotate_image(self):
         """Rotate the incoming camera image"""
-        self.rotation_angle += 90
-        if self.rotation_angle >= 360:
-            self.rotation_angle = 0
+        self.rotation += 90
+        if self.rotation >= 360:
+            self.rotation = 0
         self.save_settings()
 
 # --------------------------- SAVE SETTINGS -------------------------------#
@@ -160,7 +160,7 @@ class VideoStar():
         config = configparser.ConfigParser()
         # Define the 'Settings' section
         # set 'RotationAngle' key with the value as a string
-        config["Settings"] = {"RotationAngle": str(self.rotation_angle)}
+        config["Settings"] = {"RotationAngle": str(self.rotation)}
 
         # Open the settings.ini file in write mode
         with open("settings.ini", "w") as configfile:
@@ -184,13 +184,13 @@ class VideoStar():
                 rotation_angle = config['Settings'].get("RotationAngle", "0")
                 # Convert the obtained value to an integer
                 # and assign it to self.rotation_angle
-                self.rotation_angle = int(rotation_angle)
+                self.rotation = int(rotation_angle)
 
 # --------------------------- DISPLAY FPS ---------------------------------#
     def display_fps(self):
         """Get and display FPS"""
         # Get frames per second from cam capture properties
-        self.fps = self.cam.get(cv2.CAP_PROP_FPS)
+        self.fps = self.camera.get(cv2.CAP_PROP_FPS)
         message = f"FPS: {self.fps}"
         self.lbl_status_bar.configure(text=message)
         self.lbl_status_bar.update()
@@ -215,8 +215,8 @@ class VideoStar():
             command=self.rotate_image
         )
         self.btn_snapshot = ttk.Button(
-            self.root, text="Snapshot",
-            command=self.snapshot,
+            self.root, text="Capture Image",
+            command=self.capture_image,
             width=BUTTON_WIDTH
         )
         self.btn_quit = ttk.Button(
@@ -248,8 +248,8 @@ class VideoStar():
     def quit(self, *args):
         try:
             # If cam is in use, release it
-            if self.cam.isOpened():
-                self.cam.release()
+            if self.camera.isOpened():
+                self.camera.release()
         except:
             pass
         self.root.destroy()

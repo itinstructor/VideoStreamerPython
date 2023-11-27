@@ -6,6 +6,7 @@ Stream a video camera source to a Python Tkinter program using OpenCV.
 This cross platform program can be used to stream a video source to a Python Tkinter program. I use it in my Raspberry Pi projects to see where the robot is going. I run the program on the desktop of the Pi through a RealVNC session.
 
 ## Version History
+- (11-27-23) V3 Redesign GUI 
 - (08-01-23) V1 Basic functionality
 
 
