@@ -4,26 +4,24 @@
     Author: 
     Created: 08/01/23
     Purpose: Stream video to a Tkinter interface using opencv
-
-------------------------------------------------
-History
-------------------------------------------------
-Author     Date           Comments
-
 """
-# Raspberry Pi/Linux
-# sudo apt install libatlas-base-dev -y
-# sudo pip3 install numpy -U
-# sudo pip3 install opencv-python
 # Raspberry Pi Buster
+# sudo pip3 install pillow -U
+# sudo apt install libatlas-base-dev -y
+# sudo apt install libopenblas-dev -y
+# sudo pip3 install numpy -U
 # sudo pip3 install opencv-python==4.3.0.38
+# Edit /boot/config.txt comment out auto_detect_camera=1,
+# add gpu_mem=128 and start_x=1
 
 # Windows
 # sudo pip3 install opencv-python
 # sudo pip3 install pillow -U
 # sudo pip3 install numpy -U
+
 import tkinter as tk
 import tkinter.ttk as ttk
+import tkinter.messagebox as mb
 from PIL import Image
 from PIL import ImageTk
 import cv2
@@ -41,7 +39,6 @@ class VideoStar():
         # Set window location at
         # 600x50 for pi, 350x50 for pi zero
         self.root.geometry("+600+50")
-
         # Call self.quit when window is closed
         self.root.protocol("WM_DELETE_WINDOW", self.quit)
 
@@ -66,11 +63,9 @@ class VideoStar():
 # ------------------------ STOP VIDEO STREAM ------------------------------#
     def stop_stream(self):
         """Stop video stream"""
+        # self.streaming set to false stops the update_stream method
         self.streaming = False
         self.btn_start_stop.configure(text="Start Stream")
-        # Release the camera capture object
-        if self.cam.isOpened():
-            self.cam.release()
         self.lbl_status_bar.configure(text=" Video Stream Stopped")
 
 # ----------------------- START VIDEO CAPTURE -----------------------------#
@@ -87,7 +82,7 @@ class VideoStar():
     def update_stream(self):
         """Update the video stream by reading camera frames"""
         # Check if streaming is enabled
-        if self.streaming:
+        if self.streaming == True:
             # Read a frame from the camera
             # ret: Indicates if a frame is available, frame: Captured image
             ret, frame = self.cam.read()
@@ -123,7 +118,7 @@ class VideoStar():
         # when the main program isn't busy
         self.root.after(10, self.update_stream)
 
-# ---------------------- SAVE FRAME TO DISK -------------------------------#
+# ---------------------- TAKE SNAPSHOT ------------------------------------#
     def snapshot(self):
         """Capture and save a single video frame as a jpg image"""
         # Get a frame from the video source
@@ -148,7 +143,7 @@ class VideoStar():
             image.save(filename)
 
             # Print a message confirming the image is saved with its filename
-            print(f"Image saved as {filename}")
+            mb.showinfo("Image Saved", f"Image saved as {filename}")
 
 # --------------------------- ROTATE IMAGE --------------------------------#
     def rotate_image(self):
@@ -203,20 +198,11 @@ class VideoStar():
 # ------------------ CREATE WIDGETS ---------------------------------------#
     def create_widgets(self):
         """Create widgets"""
-        self.main_frame = ttk.Frame(
-            self.root,
-            relief=tk.RIDGE
-        )
+        BUTTON_WIDTH = 16
 
         # Create canvas to display image
-        self.canvas = tk.Canvas(self.main_frame, width=640, height=480)
+        self.canvas = tk.Canvas(self.root, width=640, height=480)
 
-        message = f" OpenCV Video Stream"
-        self.lbl_status_bar = tk.Label(
-            self.root, text=message, anchor=tk.W, relief=tk.RIDGE
-        )
-
-        BUTTON_WIDTH = 16
         self.btn_start_stop = ttk.Button(
             self.root, text="Start Stream",
             command=self.start_stop_stream,
@@ -234,14 +220,20 @@ class VideoStar():
             width=BUTTON_WIDTH
         )
         self.btn_quit = ttk.Button(
-            self.root, text="Quit", command=self.quit, width=BUTTON_WIDTH)
+            self.root, text="Quit",
+            command=self.quit, width=BUTTON_WIDTH)
 
-        self.canvas.grid(row=0, column=0, columnspan=4)
+        message = f" OpenCV Video Stream"
+        self.lbl_status_bar = tk.Label(
+            self.root, text=message, anchor=tk.W, relief=tk.RIDGE
+        )
 
-        self.btn_start_stop.grid(row=1, column=0)
-        self.btn_rotate.grid(row=1, column=1)
-        self.btn_snapshot.grid(row=1, column=2)
-        self.btn_quit.grid(row=1, column=3)
+        self.btn_start_stop.grid(row=0, column=0)
+        self.btn_rotate.grid(row=0, column=1)
+        self.btn_snapshot.grid(row=0, column=2)
+        self.btn_quit.grid(row=0, column=3)
+
+        self.canvas.grid(row=1, column=0, columnspan=4)
 
         self.lbl_status_bar.grid(row=2, column=0, columnspan=4, sticky="WE")
 
