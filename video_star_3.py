@@ -47,6 +47,11 @@ class VideoStar():
         # Start streaming flag to false
         self.is_streaming = False
         self.rotation = 0
+
+        # For FPS
+        self.frame_count = 0
+        self.start_time = 0
+
         self.load_settings()
 
         self.create_widgets()
@@ -72,6 +77,10 @@ class VideoStar():
     def start_stream(self):
         """Start video stream"""
         self.is_streaming = True
+        
+        self.frame_count = 0
+        self.start_time = time.time()
+        
         self.lbl_status_bar.configure(text=" Video Stream Starting Up . . .")
         self.lbl_status_bar.update()
         self.btn_start_stop.configure(text="Stop Stream")
@@ -100,14 +109,24 @@ class VideoStar():
                 # Create a PhotoImage object from the Image
                 photo = ImageTk.PhotoImage(image=image)
 
-                # Display the image on the canvas
-                self.canvas.create_image(0, 0, anchor=tk.NW, image=photo)
+                # Create an image on the canvas at the specified coordinates
+                self.canvas.create_image(
+                    0,            # x-coordinate for the image's top-left corner
+                    0,            # y-coordinate for the image's top-left corner
+                    # Anchor image at top-left corner (North-West)
+                    anchor=tk.NW,
+                    image=photo   # Image to be displayed
+                )
 
                 # Store the PhotoImage to update the stream
                 self.stream = photo
 
+                # For FPS
+                self.frame_count += 1
+
                 # Display the frames per second information
                 self.display_fps()
+
             else:
                 # Display an error message if failed to grab a frame
                 self.lbl_status_bar.configure(text=" Failed to grab frame")
@@ -190,10 +209,15 @@ class VideoStar():
     def display_fps(self):
         """Get and display FPS"""
         # Get frames per second from cam capture properties
-        self.fps = self.camera.get(cv2.CAP_PROP_FPS)
-        message = f"FPS: {self.fps}"
-        self.lbl_status_bar.configure(text=message)
-        self.lbl_status_bar.update()
+        # self.fps = self.camera.get(cv2.CAP_PROP_FPS)
+        
+        elapsed_time = time.time() - self.start_time
+        # Calculate FPS
+        if elapsed_time > 0:
+            fps = self.frame_count / elapsed_time
+            message = f"FPS: {fps:.2f}"
+            self.lbl_status_bar.configure(text=message)
+            self.lbl_status_bar.update()
 
 # ------------------ CREATE WIDGETS ---------------------------------------#
     def create_widgets(self):
@@ -201,11 +225,16 @@ class VideoStar():
         # Constant to have all the buttons the same width
         BUTTON_WIDTH = 16
 
-        # Create canvas to display image
-        self.canvas = tk.Canvas(self.root, width=640, height=480)
+        # Create canvas to size and display image
+        self.canvas = tk.Canvas(
+            self.root,
+            width=640,
+            height=480
+        )
 
         self.btn_start_stop = ttk.Button(
-            self.root, text="Start Stream",
+            self.root,
+            text="Start Stream",
             command=self.start_stop_stream,
             width=BUTTON_WIDTH
         )
@@ -217,12 +246,14 @@ class VideoStar():
             width=BUTTON_WIDTH
         )
         self.btn_snapshot = ttk.Button(
-            self.root, text="Capture Image",
+            self.root,
+            text="Capture Image",
             command=self.capture_image,
             width=BUTTON_WIDTH
         )
         self.btn_quit = ttk.Button(
-            self.root, text="Quit",
+            self.root,
+            text="Quit",
             command=self.quit, width=BUTTON_WIDTH
         )
 
@@ -231,12 +262,12 @@ class VideoStar():
             self.root, text=message, anchor=tk.W, relief=tk.RIDGE
         )
 
-        self.btn_start_stop.grid(row=0, column=0)
-        self.btn_rotate.grid(row=0, column=1)
-        self.btn_snapshot.grid(row=0, column=2)
-        self.btn_quit.grid(row=0, column=3)
+        self.canvas.grid(row=0, column=0, columnspan=4)
 
-        self.canvas.grid(row=1, column=0, columnspan=4)
+        self.btn_start_stop.grid(row=1, column=0)
+        self.btn_rotate.grid(row=1, column=1)
+        self.btn_snapshot.grid(row=1, column=2)
+        self.btn_quit.grid(row=1, column=3)
 
         self.lbl_status_bar.grid(row=2, column=0, columnspan=4, sticky="WE")
 
