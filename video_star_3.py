@@ -198,6 +198,7 @@ class VideoStar():
 # ------------------ CREATE WIDGETS ---------------------------------------#
     def create_widgets(self):
         """Create widgets"""
+        # Constant to have all the buttons the same width
         BUTTON_WIDTH = 16
 
         # Create canvas to display image
@@ -212,7 +213,8 @@ class VideoStar():
         self.btn_rotate = ttk.Button(
             self.root,
             text="Rotate",
-            command=self.rotate_image
+            command=self.rotate_image,
+            width=BUTTON_WIDTH
         )
         self.btn_snapshot = ttk.Button(
             self.root, text="Capture Image",
@@ -221,7 +223,8 @@ class VideoStar():
         )
         self.btn_quit = ttk.Button(
             self.root, text="Quit",
-            command=self.quit, width=BUTTON_WIDTH)
+            command=self.quit, width=BUTTON_WIDTH
+        )
 
         message = f" OpenCV Video Stream"
         self.lbl_status_bar = tk.Label(
@@ -244,14 +247,19 @@ class VideoStar():
         # The Escape key will activate the quit method
         self.root.bind('<Escape>', self.quit)
 
+        # Handle window closing clean up cv2  camera resources
+        self.root.protocol("WM_DELETE_WINDOW", quit)
+
 # --------------------------- QUIT PROGRAM --------------------------------#
     def quit(self, *args):
+        """Close clean up cv2 cameraresources, close the program"""
         try:
             # If cam is in use, release it
             if self.camera.isOpened():
                 self.camera.release()
         except:
             pass
+        # Closes the window and exit the Tkinter main loop
         self.root.destroy()
 
 
