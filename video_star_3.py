@@ -88,7 +88,6 @@ class VideoStar():
 
         self.lbl_status_bar.configure(text=" Video Stream Starting Up . . .")
         self.lbl_status_bar.update()
-        self.btn_start_stop.configure(text="Stop Stream")
         self.lbl_status_bar.configure(text=" Video Stream Running . . .")
         self.update_stream()
 
