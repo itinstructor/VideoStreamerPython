@@ -39,19 +39,22 @@ class VideoStar():
         # Set window location at
         # 600x50 for pi, 350x50 for pi zero
         self.root.geometry("+600+50")
+
         # Call self.quit when window is closed
         self.root.protocol("WM_DELETE_WINDOW", self.quit)
 
         # Create VideoCapture object 0 = 1st camera
         self.camera = cv2.VideoCapture(0)
+
         # Start streaming flag to false
         self.is_streaming = False
         self.rotation = 0
 
-        # For FPS
+        # Calculate frame count
         self.frame_count = 0
         self.start_time = 0
 
+        # Load settings from settings.ini file
         self.load_settings()
 
         self.create_widgets()
@@ -77,10 +80,12 @@ class VideoStar():
     def start_stream(self):
         """Start video stream"""
         self.is_streaming = True
-        
+
+        # Initialize frame count to 0 when stream starts
         self.frame_count = 0
+        # Store the start time
         self.start_time = time.time()
-        
+
         self.lbl_status_bar.configure(text=" Video Stream Starting Up . . .")
         self.lbl_status_bar.update()
         self.btn_start_stop.configure(text="Stop Stream")
@@ -121,7 +126,7 @@ class VideoStar():
                 # Store the PhotoImage to update the stream
                 self.stream = photo
 
-                # For FPS
+                # Add a frame to the frame count
                 self.frame_count += 1
 
                 # Display the frames per second information
@@ -177,6 +182,7 @@ class VideoStar():
         """Save program settings for RotationAngle"""
         # Create a ConfigParser object to handle configuration file
         config = configparser.ConfigParser()
+        
         # Define the 'Settings' section
         # set 'RotationAngle' key with the value as a string
         config["Settings"] = {"RotationAngle": str(self.rotation)}
@@ -201,6 +207,7 @@ class VideoStar():
             if "Settings" in config:
                 # Get the 'RotationAngle' value from the 'Settings' section
                 rotation_angle = config['Settings'].get("RotationAngle", "0")
+                
                 # Convert the obtained value to an integer
                 # and assign it to self.rotation_angle
                 self.rotation = int(rotation_angle)
@@ -210,13 +217,22 @@ class VideoStar():
         """Get and display FPS"""
         # Get frames per second from cam capture properties
         # self.fps = self.camera.get(cv2.CAP_PROP_FPS)
-        
+
+        # Calculate the elapsed time since the start
         elapsed_time = time.time() - self.start_time
-        # Calculate FPS
+
+        # Ensure elapsed time is greater than 0 to avoid division by zero
         if elapsed_time > 0:
+            # Calculate frames per second (FPS)
             fps = self.frame_count / elapsed_time
+
+            # Create a message string to display the FPS with 2 decimal places
             message = f"FPS: {fps:.2f}"
+
+            # Update the status bar label with the FPS message
             self.lbl_status_bar.configure(text=message)
+
+            # Refresh the status bar to reflect the updated message
             self.lbl_status_bar.update()
 
 # ------------------ CREATE WIDGETS ---------------------------------------#
