@@ -10,7 +10,7 @@
 # sudo apt install libatlas-base-dev -y
 # sudo apt install libopenblas-dev -y
 # sudo pip3 install numpy -U
-# sudo pip3 install opencv-python==4.3.0.38
+# sudo pip3 install opencv-python==4.3.0.38 # 
 # Edit /boot/config.txt comment out auto_detect_camera=1,
 # add gpu_mem=128 and start_x=1
 
@@ -86,9 +86,11 @@ class VideoStar():
         # Store the start time
         self.start_time = time.time()
 
-        self.lbl_status_bar.configure(text=" Video Stream Starting Up . . .")
-        self.lbl_status_bar.update()
         self.lbl_status_bar.configure(text=" Video Stream Running . . .")
+        self.btn_start_stop.configure(text="Stop Stream")
+
+        # Start update stream after thread every 10 seconds
+        # This will keep going until is_streaming is set to False
         self.update_stream()
 
 # ------------------------ UPDATE STREAM ----------------------------------#
