@@ -3,8 +3,16 @@
     Name: video_star.py
     Author: 
     Created: 08/01/23
+    Updated: 07/01/24 change to picamera2 for Bullseye
     Purpose: Stream video to a Tkinter interface using opencv
 """
+# Raspberry Pi Bullseye 32-bit & 64-bit Picamera2
+# sudo pip3 install pillow -U
+# sudo apt install libopenblas-dev -y
+# sudo pip3 install numpy -U
+# sudo pip3 install numpy==1.26.4
+# sudo apt install python3-opencv -y
+
 # Raspberry Pi Buster
 # sudo pip3 install pillow -U
 # sudo apt install libatlas-base-dev -y
@@ -14,27 +22,31 @@
 # Edit /boot/config.txt comment out auto_detect_camera=1,
 # add gpu_mem=128 and start_x=1
 
-# Raspberry Pi Bullseye 32-bit & 64-bit
+# Raspberry Pi Bullseye 32-bit & 64-bit without Picamera2
+# sudo raspi-config -> Interface Options -> Legacy Camera -> Enable
 # sudo pip3 install pillow -U
 # sudo apt install libopenblas-dev -y
 # sudo pip3 install numpy -U
 # sudo pip3 install numpy==1.26.4
 # sudo apt install python3-opencv -y
+# sudo nano /boot/config.txt
+# comment out auto_detect_camera=1,
+# add gpu_mem=128 and start_x=1
 
 # Raspberry Pi Bookworm
 # sudo pip3 install pillow -U --break-system-packages
 # sudo pip3 install numpy -U --break-system-packages
 # sudo pip3 install numpy==1.26.4 --break-system-packages
 # sudo apt install python3-opencv -y
-# Edit /boot/config.txt comment out auto_detect_camera=1,
-# add gpu_mem=128 and start_x=1
 
 # Windows
 # sudo pip3 install opencv-python
 # sudo pip3 install pillow -U
 # sudo pip3 install numpy==1.26.4
 
+from picamera2 import Picamera2
 import tkinter as tk
+import numpy as np
 import tkinter.ttk as ttk
 import tkinter.messagebox as mb
 from PIL import Image
@@ -58,20 +70,25 @@ class VideoStar():
         # Call self.quit when window is closed
         self.root.protocol("WM_DELETE_WINDOW", self.quit)
 
-        # Create VideoCapture object 0 = 1st camera
-        if os.name =="nt":
-            # Windows capture using windows DirectShow
-            self.camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-            # Set the camera resolution to 640x480
-            self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-            self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        else:
-            # Raspberry Pi Bullseye capture
-            self.camera = cv2.VideoCapture(0, cv2.CAP_V4L2)
-            self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-            self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        # # Create VideoCapture object 0 = 1st camera
+        # if os.name =="nt":
+        #     # Windows capture
+        #     self.camera = cv2.VideoCapture(0)
+        # else:
+        #     # Raspberry Pi Bullseye capture
+        #     self.camera = cv2.VideoCapture(0, cv2.CAP_V4L2)
+        self.picam2 = Picamera2()
 
-        # Set start streaming flag to false
+        # config = self.picam2.create_preview_configuration({'format': 'RGB888'})
+        #  config = self.picam2.create_still_configuration(main={"size": (640, 480)})
+        # config = self.picam2.create_video_configuration(main={"size": (640, 480), 'format': 'RGB888'})
+        self.picam2.preview_configuration.main.size = (640, 480)
+        self.picam2.preview_configuration.main.format = "RGB888"
+        # self.picam2.configure(config)
+
+        self.picam2.start()
+
+        # Start streaming flag to false
         self.is_streaming = False
         self.rotation = 0
 
@@ -125,45 +142,50 @@ class VideoStar():
         if self.is_streaming == True:
             # Read a frame from the camera
             # ret: Indicates if a frame is available, frame: Captured image
-            ret, frame = self.camera.read()
-            if ret:
-                # Convert the frame from BGR to RGB color space
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # ret, frame = self.camera.read()
+            # if ret:
+            # Convert the frame from BGR to RGB color space
 
-                # Create an Image object from the frame
-                image = Image.fromarray(frame)
+            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                # Rotate the image if the rotation angle is not zero
-                if self.rotation != 0:
-                    image = image.rotate(self.rotation)
+            # Create an Image object from the frame
+            frame = self.picam2.capture_array()
 
-                # Create a PhotoImage object from the Image
-                photo = ImageTk.PhotoImage(image=image)
+            # image = np.array(image)
 
-                # Create an image on the canvas at the specified coordinates
-                self.canvas.create_image(
-                    0,            # x-coordinate for the image's top-left corner
-                    0,            # y-coordinate for the image's top-left corner
-                    # Anchor image at top-left corner (North-West)
-                    anchor=tk.NW,
-                    image=photo   # Image to be displayed
-                )
+            # Convert the frame from BGR to RGB color space
+            # image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                # Store the image as an attribute of the object
-                # to prevent garbage collection
-                self.stream = photo
+            # Rotate the image if the rotation angle is not zero
+            if self.rotation != 0:
+                frame = frame.rotate(self.rotation)
 
-                # Add a frame to the frame count
-                self.frame_count += 1
+            # Create a PhotoImage object from the Image
+            photo = ImageTk.PhotoImage(image=frame)
 
-                # Display the frames per second information
-                self.display_fps()
+            # Create an image on the canvas at the specified coordinates
+            self.canvas.create_image(
+                0,            # x-coordinate for the image's top-left corner
+                0,            # y-coordinate for the image's top-left corner
+                # Anchor image at top-left corner (North-West)
+                anchor=tk.NW,
+                image=photo   # Image to be displayed
+            )
 
-            else:
-                # Display an error message if failed to grab a frame
-                self.lbl_status_bar.configure(text=" Failed to grab frame")
-                # Uncomment the following line to convert the frame from BGR to RGB
-                # self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
+            # Store the PhotoImage to update the stream
+            self.stream = photo
+
+            # Add a frame to the frame count
+            self.frame_count += 1
+
+            # Display the frames per second information
+            self.display_fps()
+
+#             else:
+            # Display an error message if failed to grab a frame
+            #   self.lbl_status_bar.configure(text=" Failed to grab frame")
+            # Uncomment the following line to convert the frame from BGR to RGB
+            # self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
 
         # Schedule the function to update the stream every 10 milliseconds
         # when the main program isn't busy
@@ -329,12 +351,13 @@ class VideoStar():
 # --------------------------- QUIT PROGRAM --------------------------------#
     def quit(self, *args):
         """Close clean up cv2 camera resources, close the program"""
-        try:
-            # If cam is in use, release it
-            if self.camera.isOpened():
-                self.camera.release()
-        except:
-            pass
+        self.picam2.stop()
+        # try:
+        #     # If cam is in use, release it
+        #     if self.camera.isOpened():
+        #         self.camera.release()
+        # except:
+        #     pass
         # Closes the window and exit the Tkinter main loop
         self.root.destroy()
 

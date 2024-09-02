@@ -3,12 +3,13 @@
 # importing cv2
 import cv2
 
-# For Video File
+# For tesing Video File
 # capture=cv2.VideoCapture("sample.webm")
 
 # For webcam
 capture = cv2.VideoCapture(0)
 print("Current OpenCV Camera Settings")
+
 # Show values of current camera properties
 print(f" CV_CAP_PROP_FRAME_WIDTH: {capture.get(cv2.CAP_PROP_FRAME_WIDTH)}")
 print(f"CV_CAP_PROP_FRAME_HEIGHT: {capture.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
