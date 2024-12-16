@@ -30,7 +30,7 @@
 # add gpu_mem=128 and start_x=1
 
 # Windows
-# sudo pip3 install opencv-python
+# sudo pip3 install opencv-contrib-python
 # sudo pip3 install pillow -U
 # sudo pip3 install numpy==1.26.4
 
